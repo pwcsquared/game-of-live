@@ -66,14 +66,11 @@ let hooks = {
       }
 
       window.addEventListener("resize", resizeCanvas);
-      this.pushEvent("resize", {width: window.innerWidth, height: window.innerHeight})
+      resizeCanvas();
     },
 
     updated() {
       let { canvas, context } = this;
-      let halfHeight = canvas.height / 2;
-      let halfWidth = canvas.width / 2;
-      let smallerHalf = Math.min(halfHeight, halfWidth);
       let board = JSON.parse(canvas.dataset.board);
       let length = canvas.dataset.length;
 
