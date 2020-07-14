@@ -33,15 +33,15 @@ const getPixelRatio = context => {
 };
 
 const resize = (canvas, ratio) => {
-    canvas.width = window.innerWidth * ratio;
-    canvas.height = window.innerHeight * ratio;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
 }
 
 const renderBoard = (board, length, canvas, canvasContext) => {
   const canvasSidePixelCount = canvas.width > canvas.height ? canvas.height : canvas.width;
-  const cellSize = canvasSidePixelCount / length / getPixelRatio(canvasContext);
+  const cellSize = canvasSidePixelCount / length;
   canvasContext.fillStyle = "dodgerblue";
 
   canvasContext.clearRect(0, 0, canvas.width, canvas.height); 
@@ -57,12 +57,12 @@ let hooks = {
     mounted() {
       let canvas = this.el;
       let context = canvas.getContext("2d");
-      let ratio = getPixelRatio(context);
+      let ratio = 1;
 
       Object.assign(this, { canvas, context });
 
       let resizeCanvas = () => {
-        this.pushEvent("resize", {width: window.innerWidth * ratio, height: window.innerHeight * ratio})
+        this.pushEvent("resize", {width: window.innerWidth, height: window.innerHeight})
       }
 
       window.addEventListener("resize", resizeCanvas);
