@@ -9,52 +9,60 @@ defmodule GameOfLife do
 
   @doc """
   Creates a randomized Game of Life board.
-  The data structure is a map where the keys are tuples of {x, y}.
+  The data structure is a MapSet where the values are tuples of {x, y}.
   """
   def create_gameboard(board_width) do
-    coords = Enum.to_list(0..board_width)
-
-    coords
-    |> Enum.reduce(%{}, fn x, game_board ->
-      coord_pairs = Enum.zip(Stream.cycle([x]), coords)
-      Enum.with_index(coord_pairs)
-      for pair <- coord_pairs, into: game_board, do: {pair, bool_int()}
+    board_width
+    |> generate_coord_pairs()
+    |> Enum.reduce(MapSet.new(), fn coord_pair, board ->
+      if bool_int() === 1 do
+        MapSet.put(board, coord_pair)
+      else
+        board
+      end
     end)
+  end
+
+  def advance_gameboard(board, board_width) do
+    board_width
+    |> generate_coord_pairs()
+    |> Enum.reduce(MapSet.new(), fn coords, new_board ->
+      if cell_lives?(MapSet.member?(board, coords), live_neighbor_count(coords, board)) do
+        MapSet.put(new_board, coords)
+      else
+        new_board
+      end
+    end)
+  end
+
+  def generate_coord_pairs(board_width) do
+    coord_range = 0..(board_width - 1)
+    for x <- coord_range, y <- coord_range, do: {x, y}
   end
 
   @doc """
-  Characteristics of the optimal data structure:
-  Needs quick lookup for finding neighboring cells. 
-  Has to be able to convert to a list of coordinates quickly.
+  Converts the MapSet into a list of coordinate pairs lists for sending to client.
   """
-  def create_optimized_gameboard(width) do
-  end
+  def to_list(board), do: Enum.map(board, &Tuple.to_list(&1))
 
-  def remove_dead_cells(game_board) do
-    Enum.reduce(game_board, [], fn
-      {{x, y}, 1}, acc -> [[x, y] | acc]
-      {_, 0}, acc -> acc
+  defp cell_lives?(true, 2), do: true
+  defp cell_lives?(true, 3), do: true
+  defp cell_lives?(false, 3), do: true
+  defp cell_lives?(_, _), do: false
+
+  defp live_neighbor_count({x, y}, board) do
+    {x, y}
+    |> neighbors_of()
+    |> Enum.reduce_while(0, fn neighbor, acc ->
+      if MapSet.member?(board, neighbor) do
+        {:cont, acc + 1}
+      else
+        {:cont, acc}
+      end
     end)
   end
 
-  def advance_board(board) do
-    Enum.reduce(board, %{}, fn
-      {coords, 1}, new_board ->
-        Map.put(new_board, coords, maybe_kill_cell(neighbors_of(coords, board)))
-
-      {coords, 0}, new_board ->
-        Map.put(new_board, coords, maybe_live_cell(neighbors_of(coords, board)))
-    end)
-  end
-
-  defp maybe_kill_cell(2), do: 1
-  defp maybe_kill_cell(3), do: 1
-  defp maybe_kill_cell(_), do: 0
-
-  defp maybe_live_cell(3), do: 1
-  defp maybe_live_cell(_), do: 0
-
-  defp neighbors_of({x, y}, board) do
+  defp neighbors_of({x, y}) do
     [
       {x, y + 1},
       {x, y - 1},
@@ -65,7 +73,6 @@ defmodule GameOfLife do
       {x - 1, y + 1},
       {x - 1, y - 1}
     ]
-    |> Enum.reduce(0, fn neighbor, acc -> Map.get(board, neighbor, 0) + acc end)
   end
 
   defp bool_int(), do: :rand.uniform() |> round()
