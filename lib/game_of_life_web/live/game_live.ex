@@ -4,16 +4,12 @@ defmodule GameOfLifeWeb.GameLive do
   @width 200
 
   def mount(_params, _session, socket) do
-    {:ok, pid} = GameOfLife.start_game(@width)
+    if connected?(socket), do: Process.send_after(self(), :start_game, 100)
 
     {:ok,
-     assign(socket,
-       board: GameOfLife.get_board_data(pid),
-       length: @width,
-       width: 300,
-       height: 150,
-       pid: pid
-     )}
+     socket
+     |> assign_new(:board, fn -> [] end)
+     |> assign(length: @width, width: 300, height: 150)}
   end
 
   def handle_event("resize", %{"width" => width, "height" => height}, socket) do
@@ -21,8 +17,18 @@ defmodule GameOfLifeWeb.GameLive do
   end
 
   def handle_event("advance", _, socket) do
-    GameOfLife.advance(socket.assigns.pid)
+    if socket.assigns[:pid] do
+      GameOfLife.advance(socket.assigns.pid)
 
-    {:noreply, assign(socket, board: GameOfLife.get_board_data(socket.assigns.pid))}
+      {:noreply, assign(socket, board: GameOfLife.get_board_data(socket.assigns.pid))}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_info(:start_game, socket) do
+    {:ok, pid} = GameOfLife.start_game(@width)
+
+    {:noreply, assign(socket, board: GameOfLife.get_board_data(pid), pid: pid)}
   end
 end
