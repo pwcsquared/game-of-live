@@ -35,6 +35,18 @@ defmodule GameOfLife do
     end)
   end
 
+  def start_game(width) do
+    GameOfLife.Server.start_link(width)
+  end
+
+  def get_board_data() do
+    GameOfLife.Server.get() |> to_list()
+  end
+
+  def advance() do
+    GameOfLife.Server.advance()
+  end
+
   def generate_coord_pairs(board_width) do
     coord_range = 0..(board_width - 1)
     for x <- coord_range, y <- coord_range, do: {x, y}

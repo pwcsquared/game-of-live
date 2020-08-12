@@ -1,27 +1,18 @@
 defmodule GameOfLifeWeb.GameLive do
-  use Phoenix.LiveView
+  use GameOfLifeWeb, :live_view
 
   @width 200
 
-  def render(assigns) do
-    ~L"""
-    <div class="flex">
-      <canvas
-        width="<%= @width %>"
-        height="<%= @height %>"
-        data-board="<%= Jason.encode!(@board) %>"
-        data-length="<%= @length %>"
-        phx-hook="canvas"
-      ></canvas>
-    </div>
-    """
-  end
-
   def mount(_params, _session, socket) do
-    GameOfLife.Server.start_link(@width)
-    board_data = GameOfLife.Server.get() |> GameOfLife.to_list()
+    GameOfLife.start_game(@width)
 
-    {:ok, assign(socket, board: board_data, length: @width + 1, width: 300, height: 150)}
+    {:ok,
+     assign(socket,
+       board: GameOfLife.get_board_data(),
+       length: @width + 1,
+       width: 300,
+       height: 150
+     )}
   end
 
   def handle_event("resize", %{"width" => width, "height" => height}, socket) do
@@ -29,8 +20,8 @@ defmodule GameOfLifeWeb.GameLive do
   end
 
   def handle_event("advance", _, socket) do
-    next_board_data = GameOfLife.Server.advance() |> GameOfLife.to_list()
+    GameOfLife.advance()
 
-    {:noreply, assign(socket, board: next_board_data)}
+    {:noreply, assign(socket, board: GameOfLife.get_board_data())}
   end
 end
