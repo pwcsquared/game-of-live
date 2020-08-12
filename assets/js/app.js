@@ -39,15 +39,21 @@ const resize = (canvas, ratio) => {
     canvas.style.height = `${window.innerHeight}px`;
 }
 
+const fillColor = (x, y, canvasSize) => {
+  let red = Math.max(x / canvasSize, 0.5) * 255;
+  let blue = Math.max(y / canvasSize, 0.5) * 255;
+  return `rgb(${red}, 0, ${blue}`;
+}
+
 const renderBoard = (board, length, canvas, canvasContext) => {
   const canvasSidePixelCount = canvas.width > canvas.height ? canvas.height : canvas.width;
   const cellSize = canvasSidePixelCount / length;
-  canvasContext.fillStyle = "dodgerblue";
 
   canvasContext.clearRect(0, 0, canvas.width, canvas.height); 
   board.forEach((cell) => {
     const xPos = cell[0] * cellSize;
     const yPos = cell[1] * cellSize;
+    canvasContext.fillStyle = fillColor(xPos, yPos, canvasSidePixelCount);
     canvasContext.fillRect(xPos, yPos, cellSize, cellSize);  // for live cells
   });
 }
@@ -65,7 +71,6 @@ let hooks = {
         this.pushEvent("resize", {width: window.innerWidth, height: window.innerHeight})
       }
 
-      window.addEventListener("resize", resizeCanvas);
       resizeCanvas();
     },
 
