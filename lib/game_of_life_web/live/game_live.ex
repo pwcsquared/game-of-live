@@ -4,14 +4,15 @@ defmodule GameOfLifeWeb.GameLive do
   @width 200
 
   def mount(_params, _session, socket) do
-    GameOfLife.start_game(@width)
+    {:ok, pid} = GameOfLife.start_game(@width)
 
     {:ok,
      assign(socket,
-       board: GameOfLife.get_board_data(),
-       length: @width + 1,
+       board: GameOfLife.get_board_data(pid),
+       length: @width,
        width: 300,
-       height: 150
+       height: 150,
+       pid: pid
      )}
   end
 
@@ -20,8 +21,8 @@ defmodule GameOfLifeWeb.GameLive do
   end
 
   def handle_event("advance", _, socket) do
-    GameOfLife.advance()
+    GameOfLife.advance(socket.assigns.pid)
 
-    {:noreply, assign(socket, board: GameOfLife.get_board_data())}
+    {:noreply, assign(socket, board: GameOfLife.get_board_data(socket.assigns.pid))}
   end
 end
